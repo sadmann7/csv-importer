@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table"
 import { CsvImporter } from "@/components/csv-importer"
 
-export function ShoesTable() {
+export function TricksTable() {
   const [data, setData] = React.useState(dataConfig.speicalTricks)
 
   return (

@@ -1,10 +1,10 @@
 import { Shell } from "@/components/shell"
-import { ShoesTable } from "@/components/shoes-table"
+import { TricksTable } from "@/components/tricks-table"
 
 export default function IndexPage() {
   return (
     <Shell>
-      <ShoesTable />
+      <TricksTable />
     </Shell>
   )
 }
