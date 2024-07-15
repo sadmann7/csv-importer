@@ -1,7 +1,18 @@
 import * as React from "react"
-import Papa from "papaparse"
+import * as Papa from "papaparse"
 
-export function useParseCsv() {
+interface UseParseCsvProps extends Papa.ParseConfig {
+  fields?: string[]
+  onSuccess?: (data: Record<string, unknown>[]) => void
+  onError?: (message: string) => void
+}
+
+export function useParseCsv({
+  fields,
+  onSuccess,
+  onError,
+  ...props
+}: UseParseCsvProps = {}) {
   const [fileName, setFileName] = React.useState("")
   const [parsedData, setParsedData] = React.useState<Record<string, unknown>[]>(
     []
@@ -19,6 +30,7 @@ export function useParseCsv() {
     const allResults: Record<string, unknown>[] = []
 
     Papa.parse<Record<string, unknown>>(file, {
+      ...props,
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
@@ -35,9 +47,11 @@ export function useParseCsv() {
         setFileName(
           localFile?.name ? localFile.name.replace(/\.[^/.]+$/, "") : "Untitled"
         )
+        onSuccess?.(allResults)
       },
       error: (err) => {
         setError(err.message)
+        onError?.(err.message)
       },
     })
   }
