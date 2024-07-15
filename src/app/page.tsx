@@ -1,10 +1,10 @@
-import { FileUploader } from "@/components/file-uploader"
+import { CsvImporter } from "@/components/csv-importer"
 import { Shell } from "@/components/shell"
 
 export default function IndexPage() {
   return (
     <Shell>
-      <FileUploader accept={{ "text/csv": [] }} />
+      <CsvImporter />
     </Shell>
   )
 }
