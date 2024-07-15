@@ -52,7 +52,9 @@ export function CsvImporter({
   ...props
 }: CsvImporterProps) {
   const [step, setStep] = React.useState<"upload" | "map">("upload")
-  const { parsedData, onParse } = useParseCsv()
+  const { parsedData, onParse, onFieldChange } = useParseCsv({
+    fields,
+  })
 
   const parsedFields = Object.keys(parsedData[0] ?? {})
 
@@ -103,6 +105,12 @@ export function CsvImporter({
                   <PreviewTableHead
                     key={field}
                     field={field}
+                    onFieldChange={(value) =>
+                      onFieldChange({
+                        oldField: field,
+                        newField: value,
+                      })
+                    }
                     parsedFields={parsedFields}
                     className="border-r last:border-r-0"
                   />
@@ -111,12 +119,14 @@ export function CsvImporter({
             </TableHeader>
             <TableBody>
               {parsedData.map((data, i) => (
-                <TableRow key={i}>
+                <TableRow key={i} className="h-10">
                   {fields.map((field) => (
                     <TableCell key={field} className="border-r last:border-r-0">
-                      {typeof data[field] === "string"
-                        ? data[field]
-                        : JSON.stringify(data[field])}
+                      <span className="line-clamp-1">
+                        {typeof data[field] === "string"
+                          ? data[field]
+                          : JSON.stringify(data[field])}
+                      </span>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -144,11 +154,13 @@ export function CsvImporter({
 interface PreviewTableHeadProps
   extends React.ComponentPropsWithoutRef<typeof TableHead> {
   field: string
+  onFieldChange: (value: string) => void
   parsedFields: string[]
 }
 
 function PreviewTableHead({
   field,
+  onFieldChange,
   parsedFields = [],
   className,
   ...props
@@ -192,7 +204,8 @@ function PreviewTableHead({
                       key={field}
                       value={field}
                       onSelect={(currentValue) => {
-                        setValue(currentValue === value ? "" : currentValue)
+                        setValue(currentValue)
+                        onFieldChange(currentValue)
                         setOpen(false)
                       }}
                     >

@@ -25,7 +25,7 @@ export function useParseCsv({
   }: {
     file: File
     limit?: number
-    mappingFields?: string[]
+    mappingFields?: Record<string, string>
   }) {
     const allResults: Record<string, unknown>[] = []
 
@@ -43,10 +43,11 @@ export function useParseCsv({
         }
       },
       complete: (_, localFile: File) => {
-        setParsedData(allResults)
         setFileName(
           localFile?.name ? localFile.name.replace(/\.[^/.]+$/, "") : "Untitled"
         )
+
+        setParsedData(allResults)
         onSuccess?.(allResults)
       },
       error: (err) => {
@@ -56,10 +57,28 @@ export function useParseCsv({
     })
   }
 
+  function onFieldChange({
+    oldField,
+    newField,
+  }: {
+    oldField: string
+    newField: string
+  }) {
+    setParsedData((prevData) =>
+      prevData.map((row) => {
+        const newRow = { ...row }
+        newRow[newField] = newRow[oldField]
+        delete newRow[oldField]
+        return newRow
+      })
+    )
+  }
+
   return {
     fileName,
     parsedData,
     error,
     onParse,
+    onFieldChange,
   }
 }
