@@ -28,7 +28,7 @@ export function TricksTable() {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-muted/50">
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Points</TableHead>

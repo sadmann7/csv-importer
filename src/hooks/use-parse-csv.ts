@@ -2,13 +2,11 @@ import * as React from "react"
 import * as Papa from "papaparse"
 
 interface UseParseCsvProps extends Papa.ParseConfig {
-  fields?: string[]
   onSuccess?: (data: Record<string, unknown>[]) => void
   onError?: (message: string) => void
 }
 
 export function useParseCsv({
-  fields,
   onSuccess,
   onError,
   ...props
@@ -17,16 +15,13 @@ export function useParseCsv({
   const [parsedData, setParsedData] = React.useState<Record<string, unknown>[]>(
     []
   )
+  const [mappedData, setMappedData] = React.useState<Record<string, unknown>[]>(
+    []
+  )
   const [error, setError] = React.useState<string | null>(null)
+  const [headers, setHeaders] = React.useState<string[]>([])
 
-  function onParse({
-    file,
-    limit = Infinity,
-  }: {
-    file: File
-    limit?: number
-    mappingFields?: Record<string, string>
-  }) {
+  function onParse({ file, limit = Infinity }: { file: File; limit?: number }) {
     const allResults: Record<string, unknown>[] = []
 
     Papa.parse<Record<string, unknown>>(file, {
@@ -37,6 +32,7 @@ export function useParseCsv({
       step: (results, parser) => {
         if (allResults.length < limit) {
           allResults.push(results.data)
+          setHeaders(results.meta.fields ?? [])
         } else {
           parser.abort()
           setError(`Only ${limit} rows are allowed`)
@@ -48,6 +44,7 @@ export function useParseCsv({
         )
 
         setParsedData(allResults)
+        setMappedData(allResults)
         onSuccess?.(allResults)
       },
       error: (err) => {
@@ -57,28 +54,29 @@ export function useParseCsv({
     })
   }
 
-  function onFieldChange({
+  function onMap({
     oldField,
     newField,
   }: {
     oldField: string
     newField: string
   }) {
-    setParsedData((prevData) =>
-      prevData.map((row) => {
-        const newRow = { ...row }
-        newRow[newField] = newRow[oldField]
-        delete newRow[oldField]
-        return newRow
-      })
+    const originalFieldRows = parsedData.map((row) => row[oldField])
+
+    setMappedData(
+      mappedData.map((row, index) => ({
+        ...row,
+        [newField]: originalFieldRows[index],
+      }))
     )
   }
 
   return {
     fileName,
-    parsedData,
+    headers,
+    parsedData: mappedData,
     error,
     onParse,
-    onFieldChange,
+    onMap,
   }
 }

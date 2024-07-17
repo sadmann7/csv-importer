@@ -52,11 +52,7 @@ export function CsvImporter({
   ...props
 }: CsvImporterProps) {
   const [step, setStep] = React.useState<"upload" | "map">("upload")
-  const { parsedData, onParse, onFieldChange } = useParseCsv({
-    fields,
-  })
-
-  const parsedFields = Object.keys(parsedData[0] ?? {})
+  const { headers, parsedData, onParse, onMap } = useParseCsv()
 
   return (
     <Dialog>
@@ -91,48 +87,53 @@ export function CsvImporter({
           />
         </DialogContent>
       ) : (
-        <DialogContent className="max-h-[80%] sm:max-w-6xl">
+        <DialogContent className="overflow-hidden sm:max-w-6xl">
           <DialogHeader>
             <DialogTitle>Map Fields</DialogTitle>
             <DialogDescription>
               Map the CSV fields to the database fields
             </DialogDescription>
           </DialogHeader>
-          <Table className="overflow-auto border">
-            <TableHeader className="sticky top-0 z-10 bg-background">
-              <TableRow>
-                {fields.map((field) => (
-                  <PreviewTableHead
-                    key={field}
-                    field={field}
-                    onFieldChange={(value) =>
-                      onFieldChange({
-                        oldField: field,
-                        newField: value,
-                      })
-                    }
-                    parsedFields={parsedFields}
-                    className="border-r last:border-r-0"
-                  />
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {parsedData.map((data, i) => (
-                <TableRow key={i} className="h-10">
+          <div className="grid h-[26.25rem] w-full overflow-hidden rounded-md border">
+            <Table>
+              <TableHeader className="sticky top-0 z-10 bg-background shadow">
+                <TableRow className="bg-muted/50">
                   {fields.map((field) => (
-                    <TableCell key={field} className="border-r last:border-r-0">
-                      <span className="line-clamp-1">
-                        {typeof data[field] === "string"
-                          ? data[field]
-                          : JSON.stringify(data[field])}
-                      </span>
-                    </TableCell>
+                    <PreviewTableHead
+                      key={field}
+                      field={field}
+                      onFieldChange={(value) => {
+                        onMap({
+                          oldField: value,
+                          newField: field,
+                        })
+                      }}
+                      parsedFields={headers}
+                      className="border-r last:border-r-0"
+                    />
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {parsedData.map((data, i) => (
+                  <TableRow key={i} className="h-10">
+                    {fields.map((field) => (
+                      <TableCell
+                        key={field}
+                        className="border-r last:border-r-0"
+                      >
+                        <span className="line-clamp-1">
+                          {typeof data[field] === "string"
+                            ? data[field]
+                            : JSON.stringify(data[field])}
+                        </span>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
           <DialogFooter className="gap-2 sm:space-x-0">
             <Button variant="outline" onClick={() => setStep("upload")}>
               Back
