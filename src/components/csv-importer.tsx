@@ -52,7 +52,9 @@ export function CsvImporter({
   ...props
 }: CsvImporterProps) {
   const [step, setStep] = React.useState<"upload" | "map">("upload")
-  const { headers, parsedData, onParse, onMap } = useParseCsv()
+  const { headers, data, onParse, onFieldChange, onFieldsReset } = useParseCsv()
+
+  console.log({ data })
 
   return (
     <Dialog>
@@ -62,7 +64,7 @@ export function CsvImporter({
         </Button>
       </DialogTrigger>
       {step === "upload" ? (
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="p-8 sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Import CSV</DialogTitle>
             <DialogDescription>
@@ -87,15 +89,24 @@ export function CsvImporter({
           />
         </DialogContent>
       ) : (
-        <DialogContent className="overflow-hidden sm:max-w-6xl">
-          <DialogHeader>
-            <DialogTitle>Map Fields</DialogTitle>
-            <DialogDescription>
-              Map the CSV fields to the database fields
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="overflow-hidden p-8 sm:max-w-6xl">
+          <div className="flex flex-col items-center gap-2 sm:flex-row">
+            <DialogHeader className="flex-1">
+              <DialogTitle>Map Fields</DialogTitle>
+              <DialogDescription>
+                Map the CSV fields to the database fields
+              </DialogDescription>
+            </DialogHeader>
+            <Button
+              variant="outline"
+              className="w-full sm:w-fit"
+              onClick={onFieldsReset}
+            >
+              Reset
+            </Button>
+          </div>
           <div className="grid h-[26.25rem] w-full overflow-hidden rounded-md border">
-            <Table>
+            <Table className="border-b">
               <TableHeader className="sticky top-0 z-10 bg-background shadow">
                 <TableRow className="bg-muted/50">
                   {fields.map((field) => (
@@ -103,7 +114,7 @@ export function CsvImporter({
                       key={field}
                       field={field}
                       onFieldChange={(value) => {
-                        onMap({
+                        onFieldChange({
                           oldField: value,
                           newField: field,
                         })
@@ -115,7 +126,7 @@ export function CsvImporter({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {parsedData.map((data, i) => (
+                {data.map((row, i) => (
                   <TableRow key={i} className="h-10">
                     {fields.map((field) => (
                       <TableCell
@@ -123,9 +134,9 @@ export function CsvImporter({
                         className="border-r last:border-r-0"
                       >
                         <span className="line-clamp-1">
-                          {typeof data[field] === "string"
-                            ? data[field]
-                            : JSON.stringify(data[field])}
+                          {typeof row[field] === "string"
+                            ? row[field]
+                            : JSON.stringify(row[field])}
                         </span>
                       </TableCell>
                     ))}
@@ -140,7 +151,7 @@ export function CsvImporter({
             </Button>
             <Button
               onClick={() => {
-                onImport(parsedData)
+                onImport(data)
               }}
             >
               Import
@@ -153,7 +164,7 @@ export function CsvImporter({
 }
 
 interface PreviewTableHeadProps
-  extends React.ComponentPropsWithoutRef<typeof TableHead> {
+  extends React.ThHTMLAttributes<HTMLTableCellElement> {
   field: string
   onFieldChange: (value: string) => void
   parsedFields: string[]
@@ -162,7 +173,7 @@ interface PreviewTableHeadProps
 function PreviewTableHead({
   field,
   onFieldChange,
-  parsedFields = [],
+  parsedFields,
   className,
   ...props
 }: PreviewTableHeadProps) {
@@ -176,7 +187,7 @@ function PreviewTableHead({
       {...props}
     >
       <div className="flex items-center gap-4">
-        {field}
+        <span className="line-clamp-1">{field}</span>
         <ArrowLeftIcon className="ml-1 size-4" aria-hidden="true" />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -185,7 +196,7 @@ function PreviewTableHead({
               size="sm"
               role="combobox"
               aria-expanded={open}
-              className="w-[200px] justify-between"
+              className="w-[12.5rem] justify-between"
             >
               {value
                 ? (parsedFields.find((field) => field === value) ??
@@ -194,12 +205,12 @@ function PreviewTableHead({
               <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0">
+          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
             <Command>
               <CommandInput placeholder="Search field..." />
               <CommandEmpty>No field found.</CommandEmpty>
-              <CommandGroup>
-                <CommandList>
+              <CommandList>
+                <CommandGroup>
                   {parsedFields.map((field) => (
                     <CommandItem
                       key={field}
@@ -216,11 +227,11 @@ function PreviewTableHead({
                           value === field ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      {field}
+                      <span className="line-clamp-1">{field}</span>
                     </CommandItem>
                   ))}
-                </CommandList>
-              </CommandGroup>
+                </CommandGroup>
+              </CommandList>
             </Command>
           </PopoverContent>
         </Popover>
