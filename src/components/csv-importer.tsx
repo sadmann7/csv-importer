@@ -69,6 +69,8 @@ export function CsvImporter({
     getSanitizedData,
   } = useParseCsv()
 
+  console.log({ fieldMappings })
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -179,7 +181,7 @@ interface PreviewTableHeadProps
   field: { label: string; value: string; required?: boolean }
   onFieldChange: (props: { value: string; required?: boolean }) => void
   onFieldToggle: (props: { value: string; checked: boolean }) => void
-  fieldMappings: Record<string, string | null>
+  fieldMappings: Record<string, string | undefined>
 }
 
 function PreviewTableHead({
@@ -234,7 +236,7 @@ function PreviewTableHead({
               <CommandEmpty>No field found.</CommandEmpty>
               <CommandList>
                 <CommandGroup>
-                  {Object.keys(fieldMappings).map((field) => (
+                  {[...new Set(Object.values(fieldMappings))].map((field) => (
                     <CommandItem
                       key={field}
                       value={field}

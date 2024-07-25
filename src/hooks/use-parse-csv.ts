@@ -13,8 +13,8 @@ interface CsvState {
     mapped: Record<string, unknown>[]
   }
   fieldMappings: {
-    original: Record<string, string | null>
-    current: Record<string, string | null>
+    original: Record<string, string | undefined>
+    current: Record<string, string | undefined>
   }
   error: string | null
 }
@@ -132,7 +132,7 @@ export function useParseCsv({
         ...prevState.fieldMappings,
         current: {
           ...prevState.fieldMappings.current,
-          [value]: checked ? "" : null,
+          [value]: checked ? "" : undefined,
         },
       },
       data: {

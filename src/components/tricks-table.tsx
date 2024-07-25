@@ -27,14 +27,20 @@ export function TricksTable() {
           { label: "Style", value: "style" },
         ]}
         onImport={(parsedData) => {
-          const formattedData = parsedData.map((item) => ({
-            id: crypto.randomUUID(),
-            name: item.name,
-            description: item.description,
-            points: item.points,
-            difficulty: item.difficulty,
-            style: item.style,
-          })) as unknown as DataConfig["speicalTricks"]
+          const formattedData: DataConfig["speicalTricks"] = parsedData.map(
+            (item) => ({
+              id: crypto.randomUUID(),
+              name: typeof item.name === "string" ? item.name : "",
+              description:
+                typeof item.description === "string" ? item.description : "",
+              points: typeof item.points === "number" ? item.points : 0,
+              difficulty:
+                typeof item.difficulty === "string" ? item.difficulty : "",
+              style: typeof item.style === "string" ? item.style : "",
+            })
+          )
+
+          console.log({ formattedData })
 
           setData((prev) => [...prev, ...formattedData])
         }}
@@ -54,13 +60,21 @@ export function TricksTable() {
           <TableBody>
             {data.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell className="font-medium">
+                  <span className="line-clamp-1">{item.name}</span>
+                </TableCell>
                 <TableCell>
                   <span className="line-clamp-1">{item.description}</span>
                 </TableCell>
-                <TableCell>{item.points}</TableCell>
-                <TableCell>{item.difficulty}</TableCell>
-                <TableCell>{item.style}</TableCell>
+                <TableCell>
+                  <span className="line-clamp-1">{item.points}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="line-clamp-1">{item.difficulty}</span>
+                </TableCell>
+                <TableCell>
+                  <span className="line-clamp-1">{item.style}</span>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
