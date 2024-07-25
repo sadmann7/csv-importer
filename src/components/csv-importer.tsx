@@ -6,6 +6,7 @@ import { CommandList } from "cmdk"
 
 import { cn } from "@/lib/utils"
 import { useParseCsv } from "@/hooks/use-parse-csv"
+import { useUploadFile } from "@/hooks/use-upload-file"
 import { Button, type ButtonProps } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -59,6 +60,7 @@ export function CsvImporter({
 }: CsvImporterProps) {
   const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<"upload" | "map">("upload")
+  const { onUpload, progresses, isUploading } = useUploadFile("csvUploader")
   const {
     data,
     fieldMappings,
@@ -68,8 +70,6 @@ export function CsvImporter({
     onFieldsReset,
     getSanitizedData,
   } = useParseCsv()
-
-  console.log({ fieldMappings })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -89,15 +89,27 @@ export function CsvImporter({
           <FileUploader
             accept={{ "text/csv": [] }}
             multiple={false}
-            maxSize={8 * 1024 * 1024}
-            onValueChange={(files) => {
+            maxSize={4 * 1024 * 1024}
+            maxFileCount={1}
+            // can use this instead if uploading file is not required
+            // onValueChange={(files) => {
+            //   const file = files[0]
+            //   if (!file) return
+
+            //   onParse({ file, limit: 1001 })
+
+            //   setStep("map")
+            // }}
+            progresses={progresses}
+            onUpload={async (files) => {
               const file = files[0]
               if (!file) return
-
-              onParse({ file, limit: 1001 })
-
-              setStep("map")
+              await onUpload(files).then(() => {
+                onParse({ file, limit: 1001 })
+                setStep("map")
+              })
             }}
+            disabled={isUploading}
           />
         </DialogContent>
       ) : (

@@ -71,9 +71,9 @@ interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
    * Maximum number of files for the uploader.
    * @type number | undefined
    * @default 1
-   * @example maxFiles={5}
+   * @example maxFileCount={5}
    */
-  maxFiles?: DropzoneProps["maxFiles"]
+  maxFileCount?: DropzoneProps["maxFiles"]
 
   /**
    * Whether the uploader should accept multiple files.
@@ -102,7 +102,7 @@ export function FileUploader(props: FileUploaderProps) {
       "image/*": [],
     },
     maxSize = 1024 * 1024 * 2,
-    maxFiles = 1,
+    maxFileCount = 1,
     multiple = false,
     disabled = false,
     className,
@@ -116,13 +116,13 @@ export function FileUploader(props: FileUploaderProps) {
 
   const onDrop = React.useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-      if (!multiple && maxFiles === 1 && acceptedFiles.length > 1) {
+      if (!multiple && maxFileCount === 1 && acceptedFiles.length > 1) {
         toast.error("Cannot upload more than 1 file at a time")
         return
       }
 
-      if ((files?.length ?? 0) + acceptedFiles.length > maxFiles) {
-        toast.error(`Cannot upload more than ${maxFiles} files`)
+      if ((files?.length ?? 0) + acceptedFiles.length > maxFileCount) {
+        toast.error(`Cannot upload more than ${maxFileCount} files`)
         return
       }
 
@@ -145,7 +145,7 @@ export function FileUploader(props: FileUploaderProps) {
       if (
         onUpload &&
         updatedFiles.length > 0 &&
-        updatedFiles.length <= maxFiles
+        updatedFiles.length <= maxFileCount
       ) {
         const target =
           updatedFiles.length > 0 ? `${updatedFiles.length} files` : `file`
@@ -161,7 +161,7 @@ export function FileUploader(props: FileUploaderProps) {
       }
     },
 
-    [files, maxFiles, multiple, onUpload, setFiles]
+    [files, maxFileCount, multiple, onUpload, setFiles]
   )
 
   function onRemove(index: number) {
@@ -184,7 +184,7 @@ export function FileUploader(props: FileUploaderProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const isDisabled = disabled || (files?.length ?? 0) >= maxFiles
+  const isDisabled = disabled || (files?.length ?? 0) >= maxFileCount
 
   return (
     <div className="relative flex flex-col gap-6 overflow-hidden">
@@ -192,8 +192,8 @@ export function FileUploader(props: FileUploaderProps) {
         onDrop={onDrop}
         accept={accept}
         maxSize={maxSize}
-        maxFiles={maxFiles}
-        multiple={maxFiles > 1 || multiple}
+        maxFiles={maxFileCount}
+        multiple={maxFileCount > 1 || multiple}
         disabled={isDisabled}
       >
         {({ getRootProps, getInputProps, isDragActive }) => (
@@ -235,8 +235,8 @@ export function FileUploader(props: FileUploaderProps) {
                   </p>
                   <p className="text-sm text-muted-foreground/70">
                     You can upload
-                    {maxFiles > 1
-                      ? ` ${maxFiles === Infinity ? "multiple" : maxFiles}
+                    {maxFileCount > 1
+                      ? ` ${maxFileCount === Infinity ? "multiple" : maxFileCount}
                       files (up to ${formatBytes(maxSize)} each)`
                       : ` a file with ${formatBytes(maxSize)}`}
                   </p>
