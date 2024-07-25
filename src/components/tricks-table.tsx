@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { dataConfig } from "@/config/data"
+import { dataConfig, type DataConfig } from "@/config/data"
 import {
   Table,
   TableBody,
@@ -19,9 +19,24 @@ export function TricksTable() {
   return (
     <div className="flex flex-col gap-4">
       <CsvImporter
-        fields={["name", "description", "points", "difficulty", "style"]}
+        fields={[
+          { label: "Name", value: "name", required: true },
+          { label: "Description", value: "description" },
+          { label: "Points", value: "points" },
+          { label: "Difficulty", value: "difficulty" },
+          { label: "Style", value: "style" },
+        ]}
         onImport={(parsedData) => {
-          console.log({ parsedData })
+          const formattedData = parsedData.map((item) => ({
+            id: crypto.randomUUID(),
+            name: item.name,
+            description: item.description,
+            points: item.points,
+            difficulty: item.difficulty,
+            style: item.style,
+          })) as unknown as DataConfig["speicalTricks"]
+
+          setData((prev) => [...prev, ...formattedData])
         }}
         className="self-end"
       />

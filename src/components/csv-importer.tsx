@@ -7,6 +7,7 @@ import { CommandList } from "cmdk"
 import { cn } from "@/lib/utils"
 import { useParseCsv } from "@/hooks/use-parse-csv"
 import { Button, type ButtonProps } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Command,
   CommandEmpty,
@@ -23,6 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import {
   Popover,
   PopoverContent,
@@ -41,7 +43,11 @@ import { FileUploader } from "@/components/file-uploader"
 interface CsvImporterProps
   extends React.ComponentPropsWithoutRef<typeof DialogTrigger>,
     ButtonProps {
-  fields: string[]
+  fields: {
+    label: string
+    value: string
+    required?: boolean
+  }[]
   onImport: (data: Record<string, unknown>[]) => void
 }
 
@@ -51,13 +57,22 @@ export function CsvImporter({
   className,
   ...props
 }: CsvImporterProps) {
+  const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<"upload" | "map">("upload")
-  const { headers, data, onParse, onFieldChange, onFieldsReset } = useParseCsv()
+  const {
+    data,
+    fieldMappings,
+    onParse,
+    onFieldChange,
+    onFieldToggle,
+    onFieldsReset,
+    getSanitizedData,
+  } = useParseCsv()
 
-  console.log({ data })
+  console.log({ fieldMappings })
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className={cn("w-fit", className)} {...props}>
           Import CSV
@@ -79,10 +94,7 @@ export function CsvImporter({
               const file = files[0]
               if (!file) return
 
-              onParse({
-                file,
-                limit: 1001,
-              })
+              onParse({ file, limit: 1001 })
 
               setStep("map")
             }}
@@ -111,16 +123,17 @@ export function CsvImporter({
                 <TableRow className="bg-muted/50">
                   {fields.map((field) => (
                     <PreviewTableHead
-                      key={field}
+                      key={field.value}
                       field={field}
-                      onFieldChange={(value) => {
+                      onFieldChange={(f) => {
                         onFieldChange({
-                          oldField: value,
-                          newField: field,
+                          oldValue: f.value,
+                          newValue: field.value,
                         })
                       }}
-                      parsedFields={headers}
-                      className="border-r last:border-r-0"
+                      onFieldToggle={onFieldToggle}
+                      fieldMappings={fieldMappings}
+                      className="border-r"
                     />
                   ))}
                 </TableRow>
@@ -130,13 +143,11 @@ export function CsvImporter({
                   <TableRow key={i} className="h-10">
                     {fields.map((field) => (
                       <TableCell
-                        key={field}
+                        key={field.value}
                         className="border-r last:border-r-0"
                       >
                         <span className="line-clamp-1">
-                          {typeof row[field] === "string"
-                            ? row[field]
-                            : JSON.stringify(row[field])}
+                          {String(row[field.value] ?? "")}
                         </span>
                       </TableCell>
                     ))}
@@ -150,8 +161,10 @@ export function CsvImporter({
               Back
             </Button>
             <Button
-              onClick={() => {
-                onImport(data)
+              onClick={async () => {
+                await new Promise((resolve) => setTimeout(resolve, 100))
+                onImport(getSanitizedData({ data }))
+                setOpen(false)
               }}
             >
               Import
@@ -165,30 +178,44 @@ export function CsvImporter({
 
 interface PreviewTableHeadProps
   extends React.ThHTMLAttributes<HTMLTableCellElement> {
-  field: string
-  onFieldChange: (value: string) => void
-  parsedFields: string[]
+  field: { label: string; value: string; required?: boolean }
+  onFieldChange: (props: { value: string; required?: boolean }) => void
+  onFieldToggle: (props: { value: string; checked: boolean }) => void
+  fieldMappings: Record<string, string | null>
 }
 
 function PreviewTableHead({
   field,
   onFieldChange,
-  parsedFields,
+  onFieldToggle,
+  fieldMappings,
   className,
   ...props
 }: PreviewTableHeadProps) {
+  const id = React.useId()
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState(field)
+  const fieldMapping = fieldMappings[field.value]
 
   return (
-    <TableHead
-      key={field}
-      className={cn("whitespace-nowrap py-2", className)}
-      {...props}
-    >
-      <div className="flex items-center gap-4">
-        <span className="line-clamp-1">{field}</span>
-        <ArrowLeftIcon className="ml-1 size-4" aria-hidden="true" />
+    <TableHead className={cn("whitespace-nowrap py-2", className)} {...props}>
+      <div className="flex items-center gap-4 pr-1.5">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`${id}-${field.value}`}
+            defaultChecked
+            onCheckedChange={(checked) => {
+              onFieldToggle({
+                value: field.value,
+                checked: !!checked,
+              })
+            }}
+            disabled={field.required}
+          />
+          <Label htmlFor={`${id}-${field.value}`} className="truncate">
+            {field.label}
+          </Label>
+        </div>
+        <ArrowLeftIcon className="size-4" aria-hidden="true" />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -196,12 +223,10 @@ function PreviewTableHead({
               size="sm"
               role="combobox"
               aria-expanded={open}
-              className="w-[12.5rem] justify-between"
+              className="w-48 justify-between"
+              disabled={fieldMapping === null}
             >
-              {value
-                ? (parsedFields.find((field) => field === value) ??
-                  "Select field...")
-                : "Select field..."}
+              {fieldMapping || "Select field..."}
               <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -211,20 +236,21 @@ function PreviewTableHead({
               <CommandEmpty>No field found.</CommandEmpty>
               <CommandList>
                 <CommandGroup>
-                  {parsedFields.map((field) => (
+                  {Object.keys(fieldMappings).map((field) => (
                     <CommandItem
                       key={field}
                       value={field}
                       onSelect={(currentValue) => {
-                        setValue(currentValue)
-                        onFieldChange(currentValue)
+                        onFieldChange({
+                          value: currentValue,
+                        })
                         setOpen(false)
                       }}
                     >
                       <CheckIcon
                         className={cn(
                           "mr-2 size-4",
-                          value === field ? "opacity-100" : "opacity-0"
+                          fieldMapping === field ? "opacity-100" : "opacity-0"
                         )}
                       />
                       <span className="line-clamp-1">{field}</span>

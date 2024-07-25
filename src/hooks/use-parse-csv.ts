@@ -6,23 +6,36 @@ interface UseParseCsvProps extends Papa.ParseConfig {
   onError?: (message: string) => void
 }
 
+interface CsvState {
+  fileName: string
+  data: {
+    parsed: Record<string, unknown>[]
+    mapped: Record<string, unknown>[]
+  }
+  fieldMappings: {
+    original: Record<string, string | null>
+    current: Record<string, string | null>
+  }
+  error: string | null
+}
+
 export function useParseCsv({
   onSuccess,
   onError,
   ...props
 }: UseParseCsvProps = {}) {
-  const [fileName, setFileName] = React.useState("")
-  const [headers, setHeaders] = React.useState<string[]>([])
-  const [parsedData, setParsedData] = React.useState<Record<string, unknown>[]>(
-    []
-  )
-  const [mappedData, setMappedData] = React.useState<Record<string, unknown>[]>(
-    []
-  )
-  const [fieldMappings, setFieldMappings] = React.useState<{
-    [key: string]: string
-  }>({})
-  const [error, setError] = React.useState<string | null>(null)
+  const [csvState, setCsvState] = React.useState<CsvState>({
+    fileName: "",
+    data: {
+      parsed: [],
+      mapped: [],
+    },
+    fieldMappings: {
+      current: {},
+      original: {},
+    },
+    error: null,
+  })
 
   function onParse({ file, limit = Infinity }: { file: File; limit?: number }) {
     let count = 0
@@ -36,11 +49,22 @@ export function useParseCsv({
       step: (results, parser) => {
         try {
           if (count === 0) {
-            setHeaders(
-              props.header
-                ? (results.meta.fields ?? [])
-                : Object.keys(results.data)
+            const mappings = (results.meta.fields ?? []).reduce(
+              (acc, field) => ({ ...acc, [field]: field }),
+              {}
             )
+            const checkedHeaders = (results.meta.fields ?? []).reduce(
+              (acc, field) => ({ ...acc, [field]: true }),
+              {}
+            )
+            setCsvState((prevState) => ({
+              ...prevState,
+              fieldMappings: {
+                original: mappings,
+                current: mappings,
+              },
+              checkedHeaders,
+            }))
             count++
           } else if (count <= limit) {
             allResults.push(results.data)
@@ -52,54 +76,110 @@ export function useParseCsv({
         } catch (err) {
           const message =
             err instanceof Error ? err.message : "Error parsing CSV"
-          setError(message)
+          setCsvState((prevState) => ({ ...prevState, error: message }))
           onError?.(message)
         }
       },
       complete: (_, localFile: File) => {
-        setFileName(
-          localFile?.name ? localFile.name.replace(/\.[^/.]+$/, "") : "Untitled"
-        )
-        setParsedData(allResults)
-        setMappedData(allResults)
-        setFieldMappings({})
+        setCsvState((prevState) => ({
+          ...prevState,
+          fileName: localFile?.name
+            ? localFile.name.replace(/\.[^/.]+$/, "")
+            : "Untitled",
+          data: {
+            parsed: allResults,
+            mapped: allResults,
+          },
+        }))
         onSuccess?.(allResults)
       },
     })
   }
 
   function onFieldChange({
-    oldField,
-    newField,
+    oldValue,
+    newValue,
   }: {
-    oldField: string
-    newField: string
+    oldValue: string
+    newValue: string
   }) {
-    setFieldMappings((prevMappings) => ({
-      ...prevMappings,
-      [newField]: oldField,
+    setCsvState((prevState) => ({
+      ...prevState,
+      fieldMappings: {
+        ...prevState.fieldMappings,
+        current: { ...prevState.fieldMappings.current, [newValue]: oldValue },
+      },
+      data: {
+        ...prevState.data,
+        mapped: prevState.data.mapped.map((row, index) => ({
+          ...row,
+          [newValue]: prevState.data.parsed[index]?.[oldValue],
+        })),
+      },
     }))
-    setMappedData(
-      mappedData.map((row, index) => ({
-        ...row,
-        [newField]: parsedData[index]?.[oldField],
-      }))
-    )
+  }
+
+  function onFieldToggle({
+    value,
+    checked,
+  }: {
+    value: string
+    checked: boolean
+  }) {
+    setCsvState((prevState) => ({
+      ...prevState,
+      fieldMappings: {
+        ...prevState.fieldMappings,
+        current: {
+          ...prevState.fieldMappings.current,
+          [value]: checked ? "" : null,
+        },
+      },
+      data: {
+        ...prevState.data,
+        mapped: prevState.data.mapped.map((row) => {
+          const { [value]: _, ...rest } = row
+          return rest
+        }),
+      },
+    }))
   }
 
   function onFieldsReset() {
-    setMappedData(parsedData)
-    setFieldMappings({})
+    setCsvState((prevState) => ({
+      ...prevState,
+      fieldMappings: {
+        ...prevState.fieldMappings,
+        current: prevState.fieldMappings.original,
+      },
+      data: {
+        ...prevState.data,
+        mapped: prevState.data.parsed,
+      },
+    }))
+  }
+
+  function getSanitizedData({ data }: { data: Record<string, unknown>[] }) {
+    return data.map((row) =>
+      Object.keys(row).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: row[key] === null ? "" : row[key],
+        }),
+        {}
+      )
+    )
   }
 
   return {
-    fileName,
-    headers,
-    data: mappedData,
-    fieldMappings,
-    error,
+    fileName: csvState.fileName,
+    data: csvState.data.mapped,
+    fieldMappings: csvState.fieldMappings.current,
+    error: csvState.error,
+    getSanitizedData,
     onParse,
     onFieldChange,
+    onFieldToggle,
     onFieldsReset,
   }
 }
