@@ -138,6 +138,7 @@ export function useParseCsv({
       data: {
         ...prevState.data,
         mapped: prevState.data.mapped.map((row) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [value]: _, ...rest } = row
           return rest
         }),

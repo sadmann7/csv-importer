@@ -69,8 +69,6 @@ export function CsvImporter({
     getSanitizedData,
   } = useParseCsv()
 
-  console.log({ fieldMappings })
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
