@@ -40,8 +40,6 @@ export function TricksTable() {
             })
           )
 
-          console.log({ formattedData })
-
           setData((prev) => [...prev, ...formattedData])
         }}
         className="self-end"

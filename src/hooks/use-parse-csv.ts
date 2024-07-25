@@ -2,6 +2,7 @@ import * as React from "react"
 import * as Papa from "papaparse"
 
 interface UseParseCsvProps extends Papa.ParseConfig {
+  fields: { label: string; value: string; required?: boolean }[]
   onSuccess?: (data: Record<string, unknown>[]) => void
   onError?: (message: string) => void
 }
@@ -20,10 +21,11 @@ interface CsvState {
 }
 
 export function useParseCsv({
+  fields,
   onSuccess,
   onError,
   ...props
-}: UseParseCsvProps = {}) {
+}: UseParseCsvProps) {
   const [csvState, setCsvState] = React.useState<CsvState>({
     fileName: "",
     data: {
@@ -53,17 +55,12 @@ export function useParseCsv({
               (acc, field) => ({ ...acc, [field]: field }),
               {}
             )
-            const checkedHeaders = (results.meta.fields ?? []).reduce(
-              (acc, field) => ({ ...acc, [field]: true }),
-              {}
-            )
             setCsvState((prevState) => ({
               ...prevState,
               fieldMappings: {
                 original: mappings,
                 current: mappings,
               },
-              checkedHeaders,
             }))
             count++
           } else if (count <= limit) {

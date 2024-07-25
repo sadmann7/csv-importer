@@ -6,7 +6,6 @@ import { CommandList } from "cmdk"
 
 import { cn } from "@/lib/utils"
 import { useParseCsv } from "@/hooks/use-parse-csv"
-import { useUploadFile } from "@/hooks/use-upload-file"
 import { Button, type ButtonProps } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -60,7 +59,6 @@ export function CsvImporter({
 }: CsvImporterProps) {
   const [open, setOpen] = React.useState(false)
   const [step, setStep] = React.useState<"upload" | "map">("upload")
-  const { onUpload, progresses, isUploading } = useUploadFile("csvUploader")
   const {
     data,
     fieldMappings,
@@ -69,7 +67,9 @@ export function CsvImporter({
     onFieldToggle,
     onFieldsReset,
     getSanitizedData,
-  } = useParseCsv()
+  } = useParseCsv({ fields })
+
+  console.log({ fieldMappings })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,25 +91,14 @@ export function CsvImporter({
             multiple={false}
             maxSize={4 * 1024 * 1024}
             maxFileCount={1}
-            // can use this instead if uploading file is not required
-            // onValueChange={(files) => {
-            //   const file = files[0]
-            //   if (!file) return
-
-            //   onParse({ file, limit: 1001 })
-
-            //   setStep("map")
-            // }}
-            progresses={progresses}
-            onUpload={async (files) => {
+            onValueChange={(files) => {
               const file = files[0]
               if (!file) return
-              await onUpload(files).then(() => {
-                onParse({ file, limit: 1001 })
-                setStep("map")
-              })
+
+              onParse({ file, limit: 1001 })
+
+              setStep("map")
             }}
-            disabled={isUploading}
           />
         </DialogContent>
       ) : (
@@ -177,6 +166,7 @@ export function CsvImporter({
                 await new Promise((resolve) => setTimeout(resolve, 100))
                 onImport(getSanitizedData({ data }))
                 setOpen(false)
+                setStep("upload")
               }}
             >
               Import
@@ -236,7 +226,7 @@ function PreviewTableHead({
               role="combobox"
               aria-expanded={open}
               className="w-48 justify-between"
-              disabled={fieldMapping === null}
+              disabled={fieldMapping === undefined}
             >
               {fieldMapping || "Select field..."}
               <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
@@ -248,7 +238,7 @@ function PreviewTableHead({
               <CommandEmpty>No field found.</CommandEmpty>
               <CommandList>
                 <CommandGroup>
-                  {[...new Set(Object.values(fieldMappings))].map((field) => (
+                  {[...new Set(Object.keys(fieldMappings))].map((field) => (
                     <CommandItem
                       key={field}
                       value={field}
