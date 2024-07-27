@@ -3,13 +3,6 @@ import * as Papa from "papaparse"
 
 import { getErrorMessage } from "@/lib/handle-error"
 
-interface UseParseCsvProps extends Papa.ParseConfig {
-  fields: { label: string; value: string; required?: boolean }[]
-  onSuccess?: (data: Record<string, unknown>[]) => void
-  onError?: (message: string) => void
-  showEmptyFields?: boolean
-}
-
 interface CsvState {
   fileName: string
   data: {
@@ -21,6 +14,36 @@ interface CsvState {
     current: Record<string, string | undefined>
   }
   error: string | null
+}
+
+interface UseParseCsvProps extends Papa.ParseConfig {
+  /**
+   * Array of field mappings defining the structure of the imported data.
+   * Each field includes a label, value, and optional required flag.
+   * @example fields={[{ label: 'Name', value: 'name', required: true }, { label: 'Email', value: 'email' }]}
+   */
+  fields: { label: string; value: string; required?: boolean }[]
+
+  /**
+   * Callback function invoked when data is successfully parsed.
+   * Receives an array of records representing the imported data.
+   * @example onSuccess={(data) => console.log(data)}
+   */
+  onSuccess?: (data: Record<string, unknown>[]) => void
+
+  /**
+   * Callback function invoked when an error occurs during parsing.
+   * Receives an error message.
+   * @example onError={(message) => console.error(message)}
+   */
+  onError?: (message: string) => void
+
+  /**
+   * Flag to indicate if empty fields should be shown.
+   * @default false
+   * @example showEmptyFields={true}
+   */
+  showEmptyFields?: boolean
 }
 
 export function useParseCsv({
@@ -61,19 +84,24 @@ export function useParseCsv({
         const rows = parsedChunk.data
         const columns = rows[0] ?? []
 
-        const columnsWithNameAndValues = columns.filter((_, index) => {
-          const values = rows.slice(1).map((row) => row[index])
-          return columns[index] || values.some((value) => value !== "")
-        })
-
-        const newColumns = (
-          showEmptyFields ? columns : columnsWithNameAndValues
-        ).map((column, index) => {
-          if (column.trim() === "") {
-            return `Column ${index + 1}`
-          }
-          return column
-        })
+        const newColumns = columns
+          .map((column, index) => {
+            if (column.trim() === "" && !showEmptyFields) {
+              const hasNonEmptyValue = rows
+                .slice(1)
+                .some(
+                  (row) =>
+                    row[index] !== "" &&
+                    row[index] !== null &&
+                    row[index] !== undefined
+                )
+              if (!hasNonEmptyValue) {
+                return null
+              }
+            }
+            return column.trim() === "" ? `Column ${index + 1}` : column
+          })
+          .filter((column) => column !== null)
 
         rows[0] = newColumns
         return Papa.unparse(rows)
