@@ -69,9 +69,7 @@ export function CsvImporter({
     onFieldsReset,
     getSanitizedData,
   } = useParseCsv({ fields })
-  const { onUpload, isUploading } = useUploadFile("csvUploader", {
-    defaultUploadedFiles: [],
-  })
+  const { onUpload, isUploading } = useUploadFile("csvUploader")
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
