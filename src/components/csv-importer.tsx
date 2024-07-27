@@ -92,22 +92,22 @@ export function CsvImporter({
             maxSize={4 * 1024 * 1024}
             maxFileCount={1}
             //* Can also use this without uploading the file
-            onValueChange={(files) => {
-              const file = files[0]
-              if (!file) return
-
-              onParse({ file, limit: 1001 })
-
-              setStep("map")
-            }}
-            // onUpload={async (files) => {
+            // onValueChange={(files) => {
             //   const file = files[0]
             //   if (!file) return
-            //   await onUpload(files)
 
             //   onParse({ file, limit: 1001 })
+
             //   setStep("map")
             // }}
+            onUpload={async (files) => {
+              const file = files[0]
+              if (!file) return
+              await onUpload(files)
+
+              onParse({ file, limit: 1001 })
+              setStep("map")
+            }}
             disabled={isUploading}
           />
         </DialogContent>
