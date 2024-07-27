@@ -1,10 +1,13 @@
 import * as React from "react"
 import * as Papa from "papaparse"
 
+import { getErrorMessage } from "@/lib/handle-error"
+
 interface UseParseCsvProps extends Papa.ParseConfig {
   fields: { label: string; value: string; required?: boolean }[]
   onSuccess?: (data: Record<string, unknown>[]) => void
   onError?: (message: string) => void
+  showEmptyFields?: boolean
 }
 
 interface CsvState {
@@ -24,6 +27,7 @@ export function useParseCsv({
   fields,
   onSuccess,
   onError,
+  showEmptyFields,
   ...props
 }: UseParseCsvProps) {
   const [csvState, setCsvState] = React.useState<CsvState>({
@@ -48,13 +52,43 @@ export function useParseCsv({
       header: true,
       dynamicTyping: true,
       skipEmptyLines: true,
+      beforeFirstChunk: (chunk) => {
+        const parsedChunk = Papa.parse<string[]>(chunk, {
+          header: false,
+          skipEmptyLines: true,
+        })
+
+        const rows = parsedChunk.data
+        const columns = rows[0] ?? []
+
+        const columnsWithNameAndValues = columns.filter((_, index) => {
+          const values = rows.slice(1).map((row) => row[index])
+          return columns[index] || values.some((value) => value !== "")
+        })
+
+        const newColumns = (
+          showEmptyFields ? columns : columnsWithNameAndValues
+        ).map((column, index) => {
+          if (column.trim() === "") {
+            return `Column ${index + 1}`
+          }
+          return column
+        })
+
+        rows[0] = newColumns
+        return Papa.unparse(rows)
+      },
       step: (results, parser) => {
         try {
           if (count === 0) {
-            const mappings = (results.meta.fields ?? []).reduce(
-              (acc, field) => ({ ...acc, [field]: field }),
+            const mappings = (results.meta.fields ?? [])?.reduce(
+              (acc, field) => ({
+                ...acc,
+                [field]: field,
+              }),
               {}
             )
+
             setCsvState((prevState) => ({
               ...prevState,
               fieldMappings: {
@@ -71,8 +105,7 @@ export function useParseCsv({
             throw new Error(`Only ${limit} rows are allowed`)
           }
         } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "Error parsing CSV"
+          const message = getErrorMessage(err)
           setCsvState((prevState) => ({ ...prevState, error: message }))
           onError?.(message)
         }
@@ -173,6 +206,7 @@ export function useParseCsv({
     fileName: csvState.fileName,
     data: csvState.data.mapped,
     fieldMappings: csvState.fieldMappings.current,
+    originalFieldMappings: csvState.fieldMappings.original,
     error: csvState.error,
     getSanitizedData,
     onParse,

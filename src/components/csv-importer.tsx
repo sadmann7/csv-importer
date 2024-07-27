@@ -62,6 +62,7 @@ export function CsvImporter({
   const {
     data,
     fieldMappings,
+    originalFieldMappings,
     onParse,
     onFieldChange,
     onFieldToggle,
@@ -69,7 +70,7 @@ export function CsvImporter({
     getSanitizedData,
   } = useParseCsv({ fields })
 
-  console.log({ fieldMappings })
+  console.log({ data, fieldMappings })
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -133,7 +134,8 @@ export function CsvImporter({
                         })
                       }}
                       onFieldToggle={onFieldToggle}
-                      fieldMappings={fieldMappings}
+                      originalFieldMappings={originalFieldMappings}
+                      currentFieldMapping={fieldMappings[field.value]}
                       className="border-r"
                     />
                   ))}
@@ -183,20 +185,21 @@ interface PreviewTableHeadProps
   field: { label: string; value: string; required?: boolean }
   onFieldChange: (props: { value: string; required?: boolean }) => void
   onFieldToggle: (props: { value: string; checked: boolean }) => void
-  fieldMappings: Record<string, string | undefined>
+  currentFieldMapping: string | undefined
+  originalFieldMappings: Record<string, string | undefined>
 }
 
 function PreviewTableHead({
   field,
   onFieldChange,
   onFieldToggle,
-  fieldMappings,
+  currentFieldMapping,
+  originalFieldMappings,
   className,
   ...props
 }: PreviewTableHeadProps) {
   const id = React.useId()
   const [open, setOpen] = React.useState(false)
-  const fieldMapping = fieldMappings[field.value]
 
   return (
     <TableHead className={cn("whitespace-nowrap py-2", className)} {...props}>
@@ -226,9 +229,8 @@ function PreviewTableHead({
               role="combobox"
               aria-expanded={open}
               className="w-48 justify-between"
-              disabled={fieldMapping === undefined}
             >
-              {fieldMapping || "Select field..."}
+              {currentFieldMapping || "Select field..."}
               <CaretSortIcon className="ml-2 size-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -238,26 +240,30 @@ function PreviewTableHead({
               <CommandEmpty>No field found.</CommandEmpty>
               <CommandList>
                 <CommandGroup>
-                  {[...new Set(Object.keys(fieldMappings))].map((field) => (
-                    <CommandItem
-                      key={field}
-                      value={field}
-                      onSelect={(currentValue) => {
-                        onFieldChange({
-                          value: currentValue,
-                        })
-                        setOpen(false)
-                      }}
-                    >
-                      <CheckIcon
-                        className={cn(
-                          "mr-2 size-4",
-                          fieldMapping === field ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <span className="line-clamp-1">{field}</span>
-                    </CommandItem>
-                  ))}
+                  {[...new Set(Object.values(originalFieldMappings))].map(
+                    (fm) => (
+                      <CommandItem
+                        key={fm}
+                        value={fm}
+                        onSelect={() => {
+                          onFieldChange({
+                            value: fm ?? "",
+                          })
+                          setOpen(false)
+                        }}
+                      >
+                        <CheckIcon
+                          className={cn(
+                            "mr-2 size-4",
+                            currentFieldMapping === fm
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        <span className="line-clamp-1">{fm}</span>
+                      </CommandItem>
+                    )
+                  )}
                 </CommandGroup>
               </CommandList>
             </Command>
