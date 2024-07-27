@@ -326,6 +326,9 @@ function FilePreview({ file }: FilePreviewProps) {
   }
 
   return (
-    <FileTextIcon className="size-7 text-muted-foreground" aria-hidden="true" />
+    <FileTextIcon
+      className="size-10 text-muted-foreground"
+      aria-hidden="true"
+    />
   )
 }
