@@ -7,5 +7,5 @@ export const siteConfig = {
   description:
     "A csv importer built with shadcn-ui, react-dropzone, and papaparse",
   url: absoluteUrl("/"),
-  links: { github: "https://github.com/sadmann7/file-uploader" },
+  links: { github: "https://github.com/sadmann7/csv-importer" },
 }
