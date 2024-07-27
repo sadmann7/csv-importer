@@ -30,11 +30,11 @@ export function TricksTable() {
           const formattedData: DataConfig["speicalTricks"] = parsedData.map(
             (item) => ({
               id: crypto.randomUUID(),
-              name: String(item.name),
-              description: String(item.description),
-              points: Number(item.points),
-              difficulty: String(item.difficulty),
-              style: String(item.style),
+              name: String(item.name) ?? "",
+              description: String(item.description) ?? "",
+              points: Number(item.points) ?? 0,
+              difficulty: String(item.difficulty) ?? "",
+              style: String(item.style) ?? "",
             })
           )
 

@@ -205,8 +205,7 @@ export function useParseCsv({
   return {
     fileName: csvState.fileName,
     data: csvState.data.mapped,
-    fieldMappings: csvState.fieldMappings.current,
-    originalFieldMappings: csvState.fieldMappings.original,
+    fieldMappings: csvState.fieldMappings,
     error: csvState.error,
     getSanitizedData,
     onParse,

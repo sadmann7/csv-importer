@@ -62,7 +62,6 @@ export function CsvImporter({
   const {
     data,
     fieldMappings,
-    originalFieldMappings,
     onParse,
     onFieldChange,
     onFieldToggle,
@@ -134,8 +133,8 @@ export function CsvImporter({
                         })
                       }}
                       onFieldToggle={onFieldToggle}
-                      originalFieldMappings={originalFieldMappings}
-                      currentFieldMapping={fieldMappings[field.value]}
+                      originalFieldMappings={fieldMappings.original}
+                      currentFieldMapping={fieldMappings.current[field.value]}
                       className="border-r"
                     />
                   ))}
