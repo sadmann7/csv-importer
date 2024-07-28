@@ -15,11 +15,11 @@ This is a csv-importer built with `shadnc/ui`, `react-dropzone`, and `papaparse`
 
 ## Features
 
-- [x] Upload CSV file
-- [x] Parse CSV file
-- [x] Preview CSV file in a table
-- [x] Map CSV fields to corresponding table fields
-- [x] Import CSV data to database
+- [x] Upload CSV file using `use-upload-file.ts`
+- [x] Parse CSV file using `use-parse-csv.ts`
+- [x] Preview the parsed CSV data
+- [x] Map the CSV fields to the corresponding table fields
+- [x] Import the mapped data into the table
 
 ## Running Locally
 
