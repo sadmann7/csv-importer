@@ -50,9 +50,9 @@ export function useUploadFile(
   }
 
   return {
+    onUpload,
     uploadedFiles,
     progresses,
-    onUpload,
     isUploading,
   }
 }

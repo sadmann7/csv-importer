@@ -71,7 +71,7 @@ interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
    * Maximum number of files for the uploader.
    * @type number | undefined
    * @default 1
-   * @example maxFileCount={5}
+   * @example maxFileCount={4}
    */
   maxFileCount?: DropzoneProps["maxFiles"]
 
