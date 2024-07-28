@@ -22,10 +22,8 @@ export const metadata: Metadata = {
     "nextjs",
     "react",
     "react server components",
-    "table",
-    "react-table",
-    "tanstack-table",
-    "shadcn-table",
+    "importer",
+    "csv-importer",
   ],
   authors: [
     {

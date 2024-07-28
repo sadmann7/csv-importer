@@ -108,7 +108,7 @@ export function CsvImporter({
       {step === "upload" ? (
         <DialogContent className="p-8 sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Import CSV</DialogTitle>
+            <DialogTitle>Upload CSV</DialogTitle>
             <DialogDescription>
               Drag and drop your files here or click to browse.
             </DialogDescription>
@@ -144,9 +144,9 @@ export function CsvImporter({
         <DialogContent className="overflow-hidden p-8 sm:max-w-6xl">
           <div className="flex flex-col items-center gap-2 sm:flex-row">
             <DialogHeader className="flex-1">
-              <DialogTitle>Map Fields</DialogTitle>
+              <DialogTitle>Map fields</DialogTitle>
               <DialogDescription>
-                Map the CSV fields to the database fields
+                Map the CSV fields to the corresponding table fields.
               </DialogDescription>
             </DialogHeader>
             <Button

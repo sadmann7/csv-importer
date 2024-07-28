@@ -1,6 +1,6 @@
 {
-  "name": "Csv Importer",
-  "short_name": "Csv Importer",
+  "name": "CSV Importer",
+  "short_name": "CSV Importer",
   "icons": [
     {
       "src": "/icon.png",

@@ -99,7 +99,7 @@ export function useParseCsv({
                 return null
               }
             }
-            return column.trim() === "" ? `Column ${index + 1}` : column
+            return column.trim() === "" ? `Field ${index + 1}` : column
           })
           .filter((column) => column !== null)
 
