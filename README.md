@@ -1,6 +1,6 @@
 # [CSV Importer](https://importer.sadmn.com)
 
-This is a csv-importer built with `shadnc/ui`, `radix ui`, `react-dropzone`, and `papaparse`. It is bootstrapped with `create-t3-app`.
+This is a csv-importer built with `shadnc/ui`, `react-dropzone`, and `papaparse`. It is bootstrapped with `create-t3-app`.
 
 [![CSV Importer](./public/images/screenshot.png)](https://importer.sadmn.com)
 
