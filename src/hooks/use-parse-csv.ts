@@ -124,8 +124,9 @@ export function useParseCsv({
                 current: mappings,
               },
             }))
-            count++
-          } else if (count <= limit) {
+          }
+
+          if (count < limit) {
             allResults.push(results.data)
             count++
           } else {
